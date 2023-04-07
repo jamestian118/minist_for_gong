@@ -48,8 +48,7 @@ def load_mnist_data(batch_size, train_size, val_split):
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
     test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
     val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
-    # fcn
+    # # fcn
     # return train_loader, val_loader, test_loader
-    # c
-    # nn
+    # cnn
     return train_loader, val_loader, test_loader, unlabeled_loader
