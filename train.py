@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 from model import FullyConnectedNN
 from model import CNN
 from data_loader import load_mnist_data
+import numpy as np
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -55,6 +56,10 @@ def evaluate(model, data_loader, device, return_accuracy=False):
         print(f'Accuracy: {accuracy:.2%}')
 
 def train_and_evaluate(epochs, batch_size, train_size, val_split, learning_rate, device):
+    train_accuracy_history = []
+    val_accuracy_history = []
+    x = np.array(range(0, epochs))
+    
     train_loader, val_loader, test_loader, unlabeled_loader = load_mnist_data(batch_size, train_size, val_split)
 
     model = CNN(num_classes=10).to(device)
@@ -64,12 +69,40 @@ def train_and_evaluate(epochs, batch_size, train_size, val_split, learning_rate,
 
     print(f"Training with {train_size * 100}% of the training data")
     train_loader, val_loader, test_loader, unlabeled_loader = load_mnist_data(batch_size, train_size, val_split)
-    train(model, train_loader, val_loader, unlabeled_loader, optimizer, criterion, epochs, device)
+    # train过程
+    model.train()
+
+    for epoch in range(epochs):
+        running_loss = 0.0
+        total = 0
+        correct = 0
+
+        for batch_idx, (data, target) in enumerate(train_loader):
+            data, target = data.to(device), target.to(device)
+            optimizer.zero_grad()
+            output = model(data)
+            loss = criterion(output, target)
+            loss.backward()
+            optimizer.step()
+
+            running_loss += loss.item()
+            _, predicted = torch.max(output.data, 1)
+            total += target.size(0)
+            correct += (predicted == target).sum().item()
+
+        train_accuracy = correct / total
+        train_accuracy_history.append(train_accuracy)
+        val_accuracy = evaluate(model, val_loader, device, return_accuracy=True)
+        val_accuracy_history.append(val_accuracy)
+        print(f'Epoch {epoch + 1}/{epochs}, Loss: {running_loss / (batch_idx + 1)}, '
+              f'Train Accuracy: {train_accuracy:.2%}, Val Accuracy: {val_accuracy:.2%}')
+
+    # train(model, train_loader, val_loader, unlabeled_loader, optimizer, criterion, epochs, device)
     evaluate(model, test_loader, device)
 
 # def train_and_evaluate(epochs, batch_size, train_size, val_split, hidden_size, learning_rate):
 #     train_loader, val_loader, test_loader = load_mnist_data(batch_size, train_size, val_split)
-    
+#     x = np.array(range(0, epochs))
 
 #     input_size = 28 * 28  # minist图像大小为28*28像素，同时也是输入层神经元数量
 #     num_classes = 10  # minist有10个类别，同时也是输出层的神经元数量
@@ -129,13 +162,15 @@ def train_and_evaluate(epochs, batch_size, train_size, val_split, learning_rate,
 #     test_accuracy = correct_test / total_test
 #     print(f"Test Accuracy: {test_accuracy:.4f}")
 
-#     # 历次准确率绘制
-#     plt.plot(train_accuracy_history, label="Train Accuracy")
-#     plt.plot(val_accuracy_history, label="Val Accuracy")
-#     plt.xlabel("Epoch")
-#     plt.ylabel("Accuracy")
-#     plt.legend()
-#     plt.show()
+    # 历次准确率绘制
+    plt.plot(train_accuracy_history, label="Train Accuracy")
+    plt.plot(val_accuracy_history, label="Val Accuracy")
+    plt.xlabel("Epoch")
+    plt.ylabel("Accuracy")
+    plt.legend()
+    plt.scatter(x, train_accuracy_history, marker='o')
+    plt.scatter(x, val_accuracy_history, marker='o')
+    plt.show()
 
 # # 训练并进行模型评价
 # epochs = 20
