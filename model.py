@@ -4,22 +4,22 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 # fcn
-class FullyConnectedNN(nn.Module):  # 含有一个输入层，两个隐藏层，一个输出层
-    def __init__(self, input_size, hidden_size, num_classes):
+class FullyConnectedNN(nn.Module):  # 含有两个隐藏层，一个输出层
+    def __init__(self, input_size, hidden_size1,hidden_size2, num_classes):
         super(FullyConnectedNN, self).__init__()
-        self.fc1 = nn.Linear(input_size, hidden_size)
-        self.fc2 = nn.Linear(hidden_size, hidden_size)
-        self.fc3 = nn.Linear(hidden_size, num_classes)
+        self.fc1 = nn.Linear(input_size, hidden_size1)
+        self.fc2 = nn.Linear(hidden_size1, hidden_size2)
+        self.fc3 = nn.Linear(hidden_size2, num_classes)
 
     def forward(self, x):
         x = x.view(x.size(0), -1)  # 原始特征表示为一个28*28=784的一维向量
-        x = F.relu(self.fc1(x))  # 使用rule函数激活，就是所谓活化函数
+        x = F.relu(self.fc1(x))  # 使用relu函数激活，就是所谓活化函数
         x = F.relu(self.fc2(x))
         x = self.fc3(x)
         return x
 
 # cnn
-class CNN(nn.Module):  # 含有两个卷积层、一个最大池化层和两个全连接层
+class CNN(nn.Module):  # 含有两个卷积层、两个最大池化层和两个全连接层
     def __init__(self, num_classes):
         super(CNN, self).__init__()
         self.conv1 = nn.Conv2d(1, 32, kernel_size=3, padding=1)
